@@ -1,0 +1,94 @@
+image: openjdk:13
+
+cache:
+    paths:
+        - .gradle/
+        - .gradlehome/
+
+variables:
+    GRADLE_USER_HOME: ${CI_PROJECT_DIR}/.gradlehome
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dfile.encoding=utf-8"
+
+stages:
+    - compile
+    - testcompile
+    - tests
+    - coverage
+    - dist
+
+compile:
+    stage: compile
+    script: ./gradlew classes
+    artifacts:
+        paths:
+            - build/classes/java/main
+
+testcompile:
+    stage: testcompile
+    script: ./gradlew testClasses
+    artifacts:
+        paths:
+            - build/classes/java/test
+
+test:
+    stage: tests
+    script: ./gradlew test
+    artifacts:
+        paths:
+            - build/reports/tests
+            - build/jacoco
+            - build/test-results
+
+coverage:
+    stage: coverage
+    script:
+        - ./gradlew coverage
+    coverage: '/^\d+.?\d*\% covered$/'
+    artifacts:
+        paths:
+            - build/reports/jacoco
+
+dist:
+    stage: dist
+    when: manual
+    script:
+        - ./gradlew distZip
+        - unzip build/distributions/${CI_PROJECT_NAME}.zip
+        - mv ${CI_PROJECT_NAME} ${CI_PROJECT_NAME}_dist
+    artifacts:
+        name: ${CI_PROJECT_NAME}_dist
+        paths:
+            - ${CI_PROJECT_NAME}_dist/
+        expire_in: 1 week
+
+javadoc:
+    stage: dist
+    script:
+        - ./gradlew javadoc
+        - mv build/docs/javadoc ${CI_PROJECT_NAME}_javadoc
+    artifacts:
+        name: ${CI_PROJECT_NAME}_javadoc
+        paths:
+            - ${CI_PROJECT_NAME}_javadoc
+        expire_in: 1 week
+    when: always
+
+test_report:
+    stage: dist
+    script:
+        - mv build/reports/tests/test ${CI_PROJECT_NAME}_tests
+    artifacts:
+        name: ${CI_PROJECT_NAME}_tests
+        paths:
+            - ${CI_PROJECT_NAME}_tests
+        expire_in: 1 day
+
+coverage_report:
+    stage: dist
+    script:
+        - mv build/reports/jacoco/test/html ${CI_PROJECT_NAME}_coverage
+    artifacts:
+        name: ${CI_PROJECT_NAME}_coverage
+        paths:
+            - ${CI_PROJECT_NAME}_coverage
+        expire_in: 1 day

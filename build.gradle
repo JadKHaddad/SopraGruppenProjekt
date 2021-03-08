@@ -1,0 +1,106 @@
+plugins {
+	id 'application'
+	id 'org.openjfx.javafxplugin' version '0.0.8'
+	id 'jacoco'
+	id 'eclipse'
+}
+
+mainClassName = 'de.wwu.sopra.application.App'
+
+repositories {
+    mavenCentral()
+}
+
+jacoco {
+    toolVersion = "0.8.5"
+}
+
+javafx {
+    version = "13"
+    modules = [ 'javafx.controls' ]
+}
+
+dependencies {
+    implementation 'com.thoughtworks.xstream:xstream:1.4.11.1'
+
+    // implementation 'com.j256.ormlite:ormlite-core:5.1'
+    // implementation 'com.j256.ormlite:ormlite-jdbc:5.1'
+
+    // implementation 'org.apache.logging.log4j:log4j-api:2.13.0'
+    // implementation 'org.apache.logging.log4j:log4j-core:2.13.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
+}
+
+run {
+    enableAssertions = true
+}
+
+test {
+    useJUnitPlatform {
+        includeEngines 'junit-jupiter', 'junit-vintage'
+    }
+    testLogging {
+	events "passed", "skipped", "failed"
+    }
+
+    enableAssertions = true
+}
+
+// Setup jacoco to generate csv and depend on test
+jacocoTestReport {
+    reports {
+        csv.enabled = true
+    }
+    dependsOn test
+}
+
+
+// Produce coverage percentage for GitLab
+task coverage {
+    group "Verification"
+    description "Displays overall instruction coverage percentage."
+    dependsOn jacocoTestReport
+    doLast {
+        if (jacocoTestReport.reports.csv.destination.exists()) {
+            def missed = 0
+            def covered = 0
+            jacocoTestReport.reports.csv.destination.eachLine { line ->
+                def cols = line.split(',')
+                def miss = cols[3]
+                def cov = cols[4]
+                assert miss == 'INSTRUCTION_MISSED' && cov == 'INSTRUCTION_COVERED' ||
+                    miss.isInteger() && cov.isInteger() :
+                    'Invalid jacoco CSV report'
+                if(miss.isInteger()) {
+                    missed += miss as Integer
+                    covered += cov as Integer
+                }
+            }
+            if (missed + covered > 0)
+                printf '%.2f%% covered%n', covered/(missed + covered)*100
+            else
+                println '100% covered'
+        }
+        else
+            logger.warn('No jacoco coverage csv found.')
+    }
+}
+
+java {
+    compileJava.options.encoding = 'UTF-8'
+    compileTestJava.options.encoding = 'UTF-8'
+}
+
+// Set javadoc encoding to utf-8 and define pre/post/inv tags
+javadoc {
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.docEncoding = 'UTF-8'
+    options.tags = [
+        'pre:cm:Preconditions:',
+        'post:cm:Postconditions:',
+        'inv:t:Invariants:'
+    ]
+}
