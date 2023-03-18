@@ -1,3 +1,5 @@
+# Sopra Group Project
+
 ## Build and Run
 ```sh
 export JAVA_HOME=/path/to/openjdk-13
@@ -8,11 +10,13 @@ chmod +x gradlew
 
 ./gradlew run
 ```
-## Admin Accountdaten
-* Benutzername: admin
-* Passwort: passwort
+## Admin Accountdata
+* Username: admin
+* Password: passwort
 
-bei Fehlern ins Benutzerhandbuch gucken.
-save.crypt bei vergessenen Passwörtern löschen.
-ACHTUNG: ALLE DATEN WERDEN BEIM LÖSCHEN DER save.crypt DATEI GELÖSCHT
-NUR BEI NOTFÄLLEN LÖSCHEN
+## Help
+Bei Fehlern ins Benutzerhandbuch gucken.<br>
+```save.crypt``` bei vergessenen Passwörtern löschen.
+## Warning
+ALLE DATEN WERDEN BEIM LÖSCHEN DER ```save.crypt``` DATEI GELÖSCHT.<br>
+NUR BEI NOTFÄLLEN LÖSCHEN.
